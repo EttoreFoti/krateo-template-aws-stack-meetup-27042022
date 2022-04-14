@@ -416,94 +416,27 @@ spec:
             - type: string
               string:
                 fmt: "%s-ng-noderole"
-    - base: #TODO thsi should probably be a k8s provider object
-        apiVersion: argoproj.io/v1alpha1
-        kind: Application
-        metadata:
-          namespace: krateo-system
+    - base:
+        apiVersion: helm.crossplane.io/v1beta1
+        kind: ProviderConfig
         spec:
-          project: default
-          source:
-            targetRevision: HEAD
-          destination:
-            server: https://kubernetes.default.svc
-            namespace: krateo-system
+          credentials:
+            source: Secret
+            secretRef:
+              namespace: crossplane-system
+              key: credentials
       patches:
-        - fromFieldPath: "metadata.name"
-          toFieldPath: "metadata.name"
+        - fromFieldPath: metadata.name
+          toFieldPath: metadata.name
           transforms:
             - type: string
               string:
-                fmt: "%s-argocd-app"
-        - type: CombineToComposite
-          combine:
-            variables:
-              - fromFieldPath: "spec.toRepo.schema"
-              - fromFieldPath: "spec.toRepo.domain"
-              - fromFieldPath: "spec.toRepo.organizationName"
-              - fromFieldPath: "spec.toRepo.repositoryName"
-            strategy: string
-            string:
-              fmt: "%s://%s/%s/%s"
-          toFieldPath: "spec.source.repoURL"
-    - base:
-        apiVersion: kubernetes.crossplane.io/v1alpha1
-        kind: Object
-        spec:
-          forProvider:
-            manifest:
-              apiVersion: dashboard.krateo.io/v1alpha1
-              kind: Deployment
-              metadata:
-              spec:
-                name: ${{ name }}
-                icon: "fa-brands fa-aws"
-                tags:
-                  - aws
-                  - stack
-                  - infrastructure
-                  - rds
-                links:
-                  - icon: "fa-brands fa-git"
-                  - url: https://kiratech.awsapps.com/start#/
-                    title: AWS Console
-                    icon: "fa-brands fa-aws"
-                plugins:
-                  - name: resources
-                owner: ${{ owner }}
-      patches:
-        - fromFieldPath: "spec.dashboard.description"
-          toFieldPath: "spec.forProvider.manifest.spec.description"
+                fmt: "%s-provider-helm-providerconfig"
         - fromFieldPath: "spec.name"
-          toFieldPath: "spec.forProvider.manifest.spec.name"
-        - type: CombineToComposite
-          combine:
-            variables:
-              - fromFieldPath: "spec.toRepo.schema"
-              - fromFieldPath: "spec.toRepo.domain"
-              - fromFieldPath: "spec.toRepo.organizationName"
-              - fromFieldPath: "spec.toRepo.repositoryName"
-            strategy: string
-            string:
-              fmt: "%s://%s/%s/%s"
-          toFieldPath: "spec.forProvider.manifest.spec.links[0].url"
-        - type: CombineToComposite
-          combine:
-            variables:
-              - fromFieldPath: "spec.toRepo.organizationName"
-              - fromFieldPath: "spec.toRepo.repositoryName"
-            strategy: string
-            string:
-              fmt: "%s/%s"
-          toFieldPath: "spec.forProvider.manifest.spec.links[0].title"
-        - type: CombineToComposite
-          combine:
-            variables:
-              - fromFieldPath: "spec.toRepo.organizationName"
-              - fromFieldPath: "spec.toRepo.repositoryName"
-            strategy: string
-            string:
-              fmt: "%s/%s"
-          toFieldPath: "spec.forProvider.manifest.spec.plugins[0].value"
-        - fromFieldPath: "spec.dashboard.owner"
-          toFieldPath: "spec.forProvider.manifest.spec.owner"
+          toFieldPath: "spec.credentials.secretRef.name"
+          transforms:
+            - type: string
+              string:
+                fmt: "%s-eks-kubeconfig"
+      readinessChecks:
+        - type: None
