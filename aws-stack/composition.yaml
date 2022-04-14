@@ -440,3 +440,27 @@ spec:
                 fmt: "%s-eks-kubeconfig"
       readinessChecks:
         - type: None
+    - base:
+        apiVersion: helm.crossplane.io/v1beta1
+        kind: Release
+        spec:
+          providerConfigRef:
+          forProvider:
+            chart:
+              name: sysdig
+              repository: https://charts.sysdig.com
+              #version: 3.26.5
+            namespace: krateo-system
+      patches:
+        - fromFieldPath: metadata.name
+          toFieldPath: spec.providerConfigRef.name
+          transforms:
+            - type: string
+              string:
+                fmt: "%s-helm-providerconfig"
+        - fromFieldPath: metadata.name
+          toFieldPath: metadata.name
+          transforms:
+            - type: string
+              string:
+                fmt: "%s-release-sysdig"
